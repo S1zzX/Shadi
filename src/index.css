@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@keyframes fade-slide-in {
+  0%   { opacity: 0; transform: translateX(-24px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-slide {
+  opacity: 0;
+  animation: fade-slide-in 0.5s ease-out forwards;
+}
+
+@keyframes bounce-text {
+  0%, 100% { transform: translateY(0);    }
+  20%       { transform: translateY(-14px); }
+  40%       { transform: translateY(-6px);  }
+  60%       { transform: translateY(-10px); }
+  80%       { transform: translateY(-3px);  }
+}
+
+.animate-bounce-text {
+  animation: bounce-text 1.8s ease-in-out infinite;
+}
+
+.animate-bounce-text-delay {
+  animation: bounce-text 1.8s ease-in-out 0.15s infinite;
+}
