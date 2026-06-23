@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import mainLogo from '../assets/Mainlogo.png'
 
 const COURSES = [
   {
@@ -58,7 +59,7 @@ const COURSES = [
     desc: 'Khơi dậy năng khiếu nghệ thuật: vẽ tranh, nhạc cụ cơ bản và làm đồ thủ công sáng tạo.',
     badge: 'Sáng tạo', badgeColor: 'bg-pink-500',
     age: '5 – 12 tuổi', duration: '3 tháng',
-    from: '#fce7f3', to: '#ec4899', icon: '🎨',
+    from: '#fce7f3', to: '#ec4899', icon: '🎨', image: mainLogo,
     features: ['Vẽ tranh sáng tạo', 'Nhạc cụ cơ bản', 'Thủ công mỹ nghệ', 'Triển lãm cuối khoá'],
   },
   {
@@ -211,7 +212,15 @@ export default function CourseSlider() {
                 <div className="hidden md:flex items-center justify-center p-10 relative pointer-events-none">
                   <div className="absolute w-64 h-64 rounded-full bg-white/20 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                   <div className="absolute w-48 h-48 rounded-full bg-white/25 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                  <span className="text-[140px] relative z-10 drop-shadow-xl leading-none">{course.icon}</span>
+                  {course.image ? (
+                    <img
+                      src={course.image}
+                      alt={course.title}
+                      className="relative z-10 w-44 h-44 object-contain drop-shadow-xl mix-blend-multiply"
+                    />
+                  ) : (
+                    <span className="text-[140px] relative z-10 drop-shadow-xl leading-none">{course.icon}</span>
+                  )}
                 </div>
               </div>
             ))}

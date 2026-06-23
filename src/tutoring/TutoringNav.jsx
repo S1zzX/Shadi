@@ -1,20 +1,17 @@
 import { useState } from 'react'
+import mainLogo from '../assets/Mainlogo.png'
 
 export default function TutoringNav() {
   const [open, setOpen] = useState(false)
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="max-w-5xl mx-auto px-4 py-2 flex items-center justify-between">
         {/* Logo */}
         <a href="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center shadow">
-            <svg viewBox="0 0 40 40" className="w-6 h-6">
-              <text x="4" y="28" fontSize="22" fontWeight="900" fill="#1e3a8a" fontFamily="Arial">G</text>
-            </svg>
-          </div>
+          <img src={mainLogo} alt="Logo Gia Sư Thế Hệ Mới" className="h-12 w-auto object-contain mix-blend-multiply" />
           <div>
-            <div className="text-navy-900 font-black text-sm leading-tight text-blue-900">GIA SƯ THẾ HỆ MỚI</div>
+            <div className="text-blue-900 font-black text-sm leading-tight">GIA SƯ THẾ HỆ MỚI</div>
             <div className="text-gray-500 text-[10px]">130 Đại Lộ 3 – Phước Bình</div>
           </div>
         </a>

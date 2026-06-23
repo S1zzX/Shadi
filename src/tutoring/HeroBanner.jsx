@@ -1,3 +1,7 @@
+import { useState } from 'react'
+import { API } from '../api'
+import mainLogo from '../assets/Mainlogo.png'
+
 const features = [
   'Rèn chữ đẹp',
   'Dạy Toán bằng Tiếng Anh',
@@ -6,94 +10,204 @@ const features = [
   'STEM  bằng Tiếng Anh',
 ]
 
-export default function HeroBanner() {
+const grades   = Array.from({ length: 12 }, (_, i) => `Lớp ${i + 1}`)
+const subjects = [
+  'Khoá học Tiền Tiểu học',
+  'Khoá học Tiểu học',
+  'Khoá học Tiếng Anh',
+  'Khoá học Luyện thi lớp 6 Chuyên',
+  'Khoá học Kỹ năng',
+  'Khoá học Nghệ thuật',
+  'Khoá học Lập trình',
+]
+const sessions = ['Sáng', 'Chiều', 'Tối', 'Cuối tuần']
+
+function RegisterForm() {
+  const [form, setForm]       = useState({ name:'', phone:'', grade:'', subject:'', session:'', note:'' })
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(null)
+  const [error, setError]     = useState('')
+
+  const set = (k,v) => { setForm(f=>({...f,[k]:v})); setError('') }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!form.name.trim())  return setError('Vui lòng nhập họ tên.')
+    if (!form.phone.trim()) return setError('Vui lòng nhập số điện thoại.')
+    if (!form.grade)        return setError('Vui lòng chọn lớp.')
+    if (!form.subject)      return setError('Vui lòng chọn môn học.')
+    setLoading(true); setError('')
+    try {
+      const res  = await fetch(`${API}/api/register`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          full_name: form.name.trim(),
+          phone:     form.phone.trim(),
+          course:    `${form.subject} – ${form.grade}${form.session?' – Ca '+form.session:''}`,
+          location:  form.note.trim() || 'Phước Bình',
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error||'Lỗi không xác định.')
+      setSuccess(data.registration?.id||true)
+      setForm({name:'',phone:'',grade:'',subject:'',session:'',note:''})
+    } catch(err) { setError(err.message) }
+    finally { setLoading(false) }
+  }
+
+  if (success) return (
+    <div className="text-center py-10">
+      <div className="text-5xl mb-3">🎉</div>
+      <p className="text-green-600 font-black text-lg mb-1">Đăng ký thành công!</p>
+      {typeof success==='number' && <p className="text-gray-400 text-xs mb-2">Mã đăng ký: <span className="font-bold text-blue-900">#{success}</span></p>}
+      <p className="text-gray-500 text-sm mb-5">Chúng tôi sẽ liên hệ trong vòng 15 phút.</p>
+      <button onClick={()=>setSuccess(null)} className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold px-6 py-2 rounded-full transition-colors">
+        Đăng ký thêm
+      </button>
+    </div>
+  )
+
   return (
-    <section id="home" className="relative overflow-hidden bg-white">
-      {/* Rainbow arc background */}
-      <div className="absolute top-0 right-0 w-full h-full pointer-events-none">
-        {/* Gradient arcs */}
-        <svg viewBox="0 0 800 600" className="absolute top-0 right-0 w-full h-full opacity-90" preserveAspectRatio="xMaxYMin slice">
-          <defs>
-            <linearGradient id="arc1" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f472b6" />
-              <stop offset="100%" stopColor="#fb923c" />
-            </linearGradient>
-            <linearGradient id="arc2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#c084fc" />
-              <stop offset="100%" stopColor="#f472b6" />
-            </linearGradient>
-            <linearGradient id="arc3" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#818cf8" />
-              <stop offset="100%" stopColor="#c084fc" />
-            </linearGradient>
-            <linearGradient id="arc4" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#38bdf8" />
-              <stop offset="100%" stopColor="#818cf8" />
-            </linearGradient>
-            <linearGradient id="arc5" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#4ade80" />
-              <stop offset="100%" stopColor="#38bdf8" />
-            </linearGradient>
-          </defs>
-          {/* Arcs stacked */}
-          <path d="M 800 -50 A 600 600 0 0 0 200 400" fill="none" stroke="url(#arc5)" strokeWidth="55" strokeLinecap="round" opacity="0.7"/>
-          <path d="M 800 -50 A 540 540 0 0 0 260 400" fill="none" stroke="url(#arc4)" strokeWidth="55" strokeLinecap="round" opacity="0.7"/>
-          <path d="M 800 -50 A 480 480 0 0 0 320 400" fill="none" stroke="url(#arc3)" strokeWidth="55" strokeLinecap="round" opacity="0.7"/>
-          <path d="M 800 -50 A 420 420 0 0 0 380 400" fill="none" stroke="url(#arc2)" strokeWidth="55" strokeLinecap="round" opacity="0.7"/>
-          <path d="M 800 -50 A 360 360 0 0 0 440 400" fill="none" stroke="url(#arc1)" strokeWidth="55" strokeLinecap="round" opacity="0.7"/>
-        </svg>
+    <form onSubmit={handleSubmit} className="space-y-3">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg px-3 py-2 text-xs">{error}</div>
+      )}
 
-        {/* Mushrooms left */}
-        <div className="absolute bottom-0 left-0 flex items-end gap-1 pb-4 pl-2 opacity-70">
-          <div className="text-5xl">🍄</div>
-          <div className="text-3xl mb-2">🍄</div>
-        </div>
-
-        {/* Cloud */}
-        <div className="absolute top-6 right-8 text-4xl opacity-60">☁️</div>
-        <div className="absolute top-16 right-28 text-2xl opacity-40">☁️</div>
+      {/* Name */}
+      <div>
+        <label className="text-xs font-semibold text-gray-600 mb-1 block">
+          Họ và tên phụ huynh / học sinh <span className="text-red-500">*</span>
+        </label>
+        <input type="text" value={form.name} onChange={e=>set('name',e.target.value)}
+          placeholder="Nguyễn Văn A"
+          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100"/>
       </div>
 
-      {/* Content */}
-      <div className="relative max-w-5xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center min-h-[520px]">
+      {/* Phone + Grade */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-xs font-semibold text-gray-600 mb-1 block">Số điện thoại <span className="text-red-500">*</span></label>
+          <input type="tel" value={form.phone} onChange={e=>set('phone',e.target.value)}
+            placeholder="0896.677.357"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100"/>
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-gray-600 mb-1 block">Lớp <span className="text-red-500">*</span></label>
+          <select value={form.grade} onChange={e=>set('grade',e.target.value)}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-yellow-400 bg-white">
+            <option value="">Chọn lớp</option>
+            {grades.map(g=><option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
+      </div>
 
-        {/* Left text */}
-        <div className="z-10">
-          {/* Tag */}
+      {/* Subject */}
+      <div>
+        <label className="text-xs font-semibold text-gray-600 mb-1 block">Môn học <span className="text-red-500">*</span></label>
+        <select value={form.subject} onChange={e=>set('subject',e.target.value)}
+          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-yellow-400 bg-white">
+          <option value="">Chọn môn học</option>
+          {subjects.map(s=><option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+
+      {/* Session */}
+      <div>
+        <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Ca học mong muốn</label>
+        <div className="flex flex-wrap gap-2">
+          {sessions.map(s=>(
+            <button key={s} type="button" onClick={()=>set('session',form.session===s?'':s)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                form.session===s ? 'bg-yellow-400 border-yellow-400 text-blue-900' : 'border-gray-200 text-gray-600 hover:border-yellow-300'
+              }`}>{s}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Note */}
+      <div>
+        <label className="text-xs font-semibold text-gray-600 mb-1 block">Ghi chú thêm</label>
+        <textarea value={form.note} onChange={e=>set('note',e.target.value)}
+          placeholder="Tình trạng học tập, yêu cầu đặc biệt..."
+          rows={2} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-yellow-400 resize-none"/>
+      </div>
+
+      <button type="submit" disabled={loading}
+        className="w-full bg-blue-900 hover:bg-blue-800 disabled:bg-blue-400 text-white font-black py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm uppercase tracking-wide">
+        {loading ? (
+          <><svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+          </svg>Đang gửi...</>
+        ) : '🎯 ĐĂNG KÝ TƯ VẤN MIỄN PHÍ'}
+      </button>
+
+      <p className="text-center text-gray-400 text-xs">
+        Hoặc gọi ngay{' '}
+        <a href="tel:0896677357" className="text-yellow-500 font-bold hover:underline">0896.677.357</a>
+      </p>
+    </form>
+  )
+}
+
+export default function HeroBanner() {
+  return (
+    <section id="home" className="relative overflow-hidden bg-white min-h-screen flex items-center">
+
+      {/* ── Rainbow arcs ────────────────────────────── */}
+      <div className="absolute inset-0 pointer-events-none">
+        <svg viewBox="0 0 900 700" className="absolute top-0 right-0 w-[65%] h-full opacity-90" preserveAspectRatio="xMaxYMin slice">
+          <defs>
+            {[['a1','#f472b6','#fb923c'],['a2','#c084fc','#f472b6'],['a3','#818cf8','#c084fc'],
+              ['a4','#38bdf8','#818cf8'],['a5','#4ade80','#38bdf8'],['a6','#fde68a','#4ade80']].map(([id,c1,c2])=>(
+              <linearGradient key={id} id={id} x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={c1}/>
+                <stop offset="100%" stopColor={c2}/>
+              </linearGradient>
+            ))}
+          </defs>
+          {[['a6',720],['a5',640],['a4',560],['a3',480],['a2',400],['a1',320]].map(([id,r])=>(
+            <path key={id} d={`M 900 -60 A ${r} ${r} 0 0 0 ${900-r} ${r+60}`}
+              fill="none" stroke={`url(#${id})`} strokeWidth="58" strokeLinecap="round" opacity="0.75"/>
+          ))}
+        </svg>
+      </div>
+
+      {/* spacer — kids are now positioned relative to the form card below */}
+
+      {/* ── Main content grid ───────────────────────── */}
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+
+        {/* Left — hero text */}
+        <div>
           <div
             className="animate-fade-slide inline-block bg-blue-900 text-white text-sm font-black px-4 py-1.5 rounded mb-4 uppercase tracking-wide"
-            style={{ animationDelay: '0.0s' }}
+            style={{animationDelay:'0.0s'}}
           >
             TRUNG TÂM GIA SƯ THẾ HỆ MỚI
           </div>
 
-          {/* Main title */}
-          <div className="mb-2 animate-fade-slide" style={{ animationDelay: '0.15s' }}>
+          <div className="mb-2 animate-fade-slide" style={{animationDelay:'0.15s'}}>
             <span className="animate-bounce-text inline-block text-yellow-400 font-black text-5xl md:text-6xl leading-none drop-shadow-sm">TIỂU HỌC</span>
           </div>
-          <div className="mb-5 animate-fade-slide" style={{ animationDelay: '0.28s' }}>
+          <div className="mb-5 animate-fade-slide" style={{animationDelay:'0.28s'}}>
             <span className="animate-bounce-text-delay inline-block text-blue-900 font-black text-6xl md:text-7xl leading-none tracking-tight">DẠY KÈM</span>
           </div>
 
-          {/* Address badge */}
           <div
             className="animate-fade-slide inline-block bg-yellow-400 text-blue-900 font-black text-base px-6 py-2 rounded-full mb-6 shadow-md"
-            style={{ animationDelay: '0.42s' }}
+            style={{animationDelay:'0.42s'}}
           >
             130 ĐẠI LỘ 3 – PHƯỚC BÌNH
           </div>
 
-          {/* Feature list */}
           <ul className="space-y-2 mb-8">
-            {features.map((f, i) => (
-              <li
-                key={i}
-                className="animate-fade-slide flex items-center gap-3"
-                style={{ animationDelay: `${0.6 + i * 0.18}s` }}
-              >
+            {features.map((f,i)=>(
+              <li key={i} className="animate-fade-slide flex items-center gap-3"
+                style={{animationDelay:`${0.6+i*0.18}s`}}>
                 <div className="w-6 h-6 rounded border-2 border-blue-900 flex items-center justify-center flex-shrink-0 bg-white">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-blue-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/>
                   </svg>
                 </div>
                 <span className="text-gray-800 font-medium text-base">{f}</span>
@@ -101,11 +215,8 @@ export default function HeroBanner() {
             ))}
           </ul>
 
-          {/* Phone button */}
-          <a
-            href="tel:0896677357"
-            className="inline-flex items-center gap-3 bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-black px-6 py-3 rounded-full shadow-lg transition-colors text-lg"
-          >
+          <a href="tel:0896677357"
+            className="inline-flex items-center gap-3 bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-black px-6 py-3 rounded-full shadow-lg transition-colors text-lg">
             <div className="w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>
@@ -115,63 +226,31 @@ export default function HeroBanner() {
           </a>
         </div>
 
-        {/* Right illustration */}
-        <div className="z-10 flex justify-center items-end">
-          <div className="relative">
-            {/* Book illustration */}
-            <div className="w-56 h-56 md:w-72 md:h-72 relative">
-              {/* Large open book */}
-              <svg viewBox="0 0 300 260" className="w-full h-full drop-shadow-xl">
-                {/* Book pages */}
-                <ellipse cx="150" cy="220" rx="140" ry="18" fill="#e8a44a" opacity="0.4"/>
-                {/* Left page */}
-                <path d="M 20 60 Q 20 200 150 210 Q 20 200 20 60 Z" fill="#f97316" />
-                <path d="M 20 60 Q 85 55 150 210 L 150 210 Q 20 200 20 60 Z" fill="#fb923c" />
-                {/* Right page */}
-                <path d="M 280 60 Q 280 200 150 210 Q 280 200 280 60 Z" fill="#fbbf24" />
-                <path d="M 280 60 Q 215 55 150 210 L 150 210 Q 280 200 280 60 Z" fill="#fcd34d" />
-                {/* Book spine */}
-                <path d="M 148 55 Q 150 130 150 210" stroke="#92400e" strokeWidth="4" fill="none"/>
-                {/* Book cover */}
-                <path d="M 25 62 Q 87 52 148 58 Q 87 52 25 62 Z" fill="#9a3412"/>
-                <path d="M 275 62 Q 213 52 152 58 Q 213 52 275 62 Z" fill="#78350f"/>
+        {/* Right — registration form */}
+        <div id="register" className="relative pt-14">
 
-                {/* Kid 1 - sitting reading on left */}
-                <circle cx="85" cy="48" r="18" fill="#fed7aa"/>
-                <rect x="70" y="62" width="30" height="28" rx="4" fill="#dc2626"/>
-                <rect x="72" y="88" width="12" height="22" rx="3" fill="#1e40af"/>
-                <rect x="86" y="88" width="12" height="22" rx="3" fill="#1e40af"/>
-                {/* Arms */}
-                <rect x="58" y="66" width="15" height="8" rx="4" fill="#dc2626"/>
-                <rect x="97" y="66" width="15" height="8" rx="4" fill="#dc2626"/>
-                {/* Book in hand */}
-                <rect x="55" y="68" width="20" height="14" rx="2" fill="#fef3c7" stroke="#92400e" strokeWidth="1"/>
-                {/* Hair */}
-                <path d="M 68 40 Q 85 30 102 40 Q 95 30 85 28 Q 75 28 68 40 Z" fill="#92400e"/>
-
-                {/* Kid 2 - sitting with laptop on right */}
-                <circle cx="215" cy="52" r="18" fill="#fed7aa"/>
-                <rect x="200" y="66" width="30" height="28" rx="4" fill="#f59e0b"/>
-                <rect x="202" y="92" width="12" height="22" rx="3" fill="#1e3a8a"/>
-                <rect x="216" y="92" width="12" height="22" rx="3" fill="#1e3a8a"/>
-                {/* Laptop */}
-                <rect x="195" y="76" width="28" height="18" rx="2" fill="#374151" opacity="0.9"/>
-                <rect x="197" y="78" width="24" height="13" rx="1" fill="#60a5fa"/>
-                {/* Backpack left */}
-                <rect x="182" y="72" width="20" height="24" rx="4" fill="#2563eb"/>
-                <circle cx="192" cy="80" r="4" fill="#1d4ed8"/>
-                {/* Hair */}
-                <path d="M 198 44 Q 215 34 232 44 Q 225 34 215 32 Q 205 32 198 44 Z" fill="#1c1917"/>
-              </svg>
-            </div>
+          {/* Main logo sitting on top of the card */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-28 select-none z-20">
+            <img src={mainLogo} alt="Logo" className="w-full h-full object-contain mix-blend-multiply drop-shadow-md" />
           </div>
-        </div>
+
+          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+            <h2 className="text-blue-900 font-black text-xl mb-1 text-center uppercase tracking-wide">
+              ĐĂNG KÝ TƯ VẤN
+            </h2>
+            <p className="text-gray-400 text-xs text-center mb-6">
+              Hoàn toàn miễn phí – Phản hồi trong 15 phút
+            </p>
+            <RegisterForm />
+          </div>
+        </div>{/* end relative pt-14 wrapper */}
+
       </div>
 
       {/* Bottom wave */}
-      <div className="relative h-12 overflow-hidden">
-        <svg viewBox="0 0 1440 48" className="absolute bottom-0 w-full" preserveAspectRatio="none">
-          <path d="M0,24 C360,48 1080,0 1440,24 L1440,48 L0,48 Z" fill="#f8fafc"/>
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
+        <svg viewBox="0 0 1440 40" className="w-full" preserveAspectRatio="none">
+          <path d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z" fill="#f8fafc"/>
         </svg>
       </div>
     </section>
